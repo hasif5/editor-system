@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "name": "hsaifs-test-project",
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm install",
+  "outputDirectory": ".next"
+}
+

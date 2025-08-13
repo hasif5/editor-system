@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ContentEditable from 'react-contenteditable';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
@@ -32,6 +32,70 @@ export default function PDFEditor() {
   ]);
 
   const printRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbar, setToolbar] = useState<{ visible: boolean; x: number; y: number }>({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
+  const [currentEditable, setCurrentEditable] = useState<HTMLElement | null>(null);
+
+  const positionToolbarNear = (target: HTMLElement) => {
+    const selection = window.getSelection();
+    let rect: DOMRect | null = null;
+    if (selection && selection.rangeCount > 0) {
+      const rangeRect = selection.getRangeAt(0).getBoundingClientRect();
+      if (rangeRect && rangeRect.width > 0 && rangeRect.height > 0) {
+        rect = rangeRect as DOMRect;
+      }
+    }
+    if (!rect) {
+      rect = target.getBoundingClientRect();
+    }
+    const x = rect.left + rect.width / 2 + window.scrollX;
+    const y = rect.top + window.scrollY - 8; // show slightly above
+    setToolbar({ visible: true, x, y });
+  };
+
+  const handleEditableFocus = (e: React.FocusEvent<Element>) => {
+    const el = e.currentTarget as HTMLElement;
+    setCurrentEditable(el);
+    positionToolbarNear(el);
+  };
+
+  const handleEditableMouseUp = (e: React.MouseEvent<Element>) => {
+    if (!isEditing) return;
+    positionToolbarNear(e.currentTarget as HTMLElement);
+  };
+
+  useEffect(() => {
+    const onClick = (ev: MouseEvent) => {
+      const target = ev.target as Node;
+      if (
+        toolbarRef.current &&
+        (toolbarRef.current.contains(target) || (currentEditable && currentEditable.contains(target)))
+      ) {
+        return; // keep open when clicking inside editable or toolbar
+      }
+      setToolbar((t) => ({ ...t, visible: false }));
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [currentEditable]);
+
+  const applyFormat = (command: 'bold' | 'italic' | 'underline') => {
+    if (!isEditing) return;
+    try {
+      document.execCommand(command, false);
+      // Reposition and refocus to keep editing smooth
+      if (currentEditable) {
+        currentEditable.focus();
+        positionToolbarNear(currentEditable);
+      }
+    } catch (err) {
+      // no-op
+    }
+  };
 
   const handleQuestionChange = (id: string, newQuestion: string) => {
     setQuestions(prev => 
@@ -217,7 +281,42 @@ export default function PDFEditor() {
       </div>
 
       {/* PDF Preview */}
-      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden ring-1 ring-slate-200 px-2 sm:px-4">
+      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden ring-1 ring-slate-200 px-2 sm:px-4 relative">
+        {isEditing && toolbar.visible && (
+          <div
+            ref={toolbarRef}
+            style={{ left: toolbar.x, top: toolbar.y, transform: 'translate(-50%, -100%)' }}
+            className="fixed z-50 bg-white/95 backdrop-blur border border-slate-200 rounded-full shadow-lg px-1 py-1 flex items-center gap-1"
+          >
+            <button
+              type="button"
+              aria-label="Bold"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyFormat('bold')}
+              className="px-2 py-1 rounded-full text-slate-700 hover:bg-slate-100 font-bold"
+            >
+              B
+            </button>
+            <button
+              type="button"
+              aria-label="Italic"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyFormat('italic')}
+              className="px-2 py-1 rounded-full text-slate-700 hover:bg-slate-100 italic"
+            >
+              I
+            </button>
+            <button
+              type="button"
+              aria-label="Underline"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyFormat('underline')}
+              className="px-2 py-1 rounded-full text-slate-700 hover:bg-slate-100 underline"
+            >
+              U
+            </button>
+          </div>
+        )}
         <div 
           ref={printRef}
           className="bg-white sm:p-10 p-4 min-h-[297mm]"
@@ -235,6 +334,8 @@ export default function PDFEditor() {
                   ? 'hover:bg-yellow-100 focus:bg-yellow-100 cursor-text' 
                   : 'cursor-default'
               }`}
+              onFocus={handleEditableFocus}
+              onMouseUp={handleEditableMouseUp}
             />
             <ContentEditable
               html={subtitle}
@@ -246,6 +347,8 @@ export default function PDFEditor() {
                   ? 'hover:bg-yellow-100 focus:bg-yellow-100 cursor-text' 
                   : 'cursor-default'
               }`}
+              onFocus={handleEditableFocus}
+              onMouseUp={handleEditableMouseUp}
             />
           </div>
 
@@ -277,6 +380,8 @@ export default function PDFEditor() {
                           ? 'hover:bg-yellow-100 hover:border-yellow-300 focus:bg-yellow-100 focus:border-yellow-300 cursor-text' 
                           : 'cursor-default'
                       }`}
+                      onFocus={handleEditableFocus}
+                      onMouseUp={handleEditableMouseUp}
                     />
                   </div>
                 </div>
@@ -301,6 +406,8 @@ export default function PDFEditor() {
                             ? 'hover:bg-yellow-100 hover:border-yellow-300 focus:bg-yellow-100 focus:border-yellow-300 cursor-text' 
                             : 'cursor-default'
                         }`}
+                        onFocus={handleEditableFocus}
+                        onMouseUp={handleEditableMouseUp}
                       />
                     </div>
                   ))}
@@ -320,6 +427,8 @@ export default function PDFEditor() {
                   ? 'hover:bg-yellow-100 focus:bg-yellow-100 cursor-text' 
                   : 'cursor-default'
               }`}
+              onFocus={handleEditableFocus}
+              onMouseUp={handleEditableMouseUp}
             />
           </div>
         </div>

@@ -9,6 +9,8 @@ declare module 'react-contenteditable' {
     onFocus?: (event: React.FocusEvent) => void;
     onKeyUp?: (event: React.KeyboardEvent) => void;
     onKeyDown?: (event: React.KeyboardEvent) => void;
+    onMouseUp?: (event: React.MouseEvent) => void;
+    onMouseDown?: (event: React.MouseEvent) => void;
     className?: string;
     style?: React.CSSProperties;
     tagName?: string;

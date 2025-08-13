@@ -78,7 +78,13 @@ export default function PDFEditor() {
       
       const element = printRef.current;
 
-      // Use html2canvas-pro directly on the element - it supports modern CSS color functions
+      // Force exact A4 width during render for consistent PDF on mobile, then restore
+      const prevWidth = element.style.width;
+      const prevMaxWidth = (element.style as any).maxWidth;
+      element.style.width = '210mm';
+      (element.style as any).maxWidth = '210mm';
+
+      // Use html2canvas-pro directly on the element - supports modern CSS color functions
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -87,6 +93,10 @@ export default function PDFEditor() {
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight
       });
+
+      // Restore original styles
+      element.style.width = prevWidth;
+      (element.style as any).maxWidth = prevMaxWidth;
 
       // Create PDF with proper sizing
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -207,11 +217,11 @@ export default function PDFEditor() {
       </div>
 
       {/* PDF Preview */}
-      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden ring-1 ring-slate-200">
+      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden ring-1 ring-slate-200 px-2 sm:px-4">
         <div 
           ref={printRef}
-          className="bg-white p-10 min-h-[297mm]"
-          style={{ width: '210mm', margin: '0 auto' }}
+          className="bg-white sm:p-10 p-4 min-h-[297mm]"
+          style={{ maxWidth: '210mm', width: '100%', margin: '0 auto' }}
         >
           {/* Document Header */}
           <div className="text-center mb-8 border-b-2 border-gray-200 pb-6">

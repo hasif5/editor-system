@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hasif's Test Project — Single‑Page PDF Editor
 
-## Getting Started
+Create and download beautiful single‑page PDFs with live editable content.
 
-First, run the development server:
+This project provides a focused “what you see is what you export” editor built on Next.js. It uses in‑place editing with `contenteditable` and exports the preview area to a paged A4 PDF with proper margins.
+
+## Why this exists
+
+Most WYSIWYG editors are either too heavy or not 1:1 with PDFs. This project keeps it simple:
+
+- Edit directly on the document (headings, questions, MCQ choices)
+- Toggle Edit Mode to prevent accidental changes
+- Export exactly what you see to a PDF sized to A4 with margins
+
+## Key features
+
+- Live inline editing powered by [`react-contenteditable`](https://www.npmjs.com/package/react-contenteditable)
+- Reliable PDF export using [`html2canvas-pro`](https://www.npmjs.com/package/html2canvas-pro) + [`jspdf`](https://www.npmjs.com/package/jspdf)
+- Edit Mode toggle (green/grey) to lock and unlock editing
+- Floating formatting toolbar (Bold / Italic / Underline) shown near the caret when editing
+- MCQ question blocks with choices (A/B/C/D) — add and remove questions
+- Mobile‑friendly layout; exports consistently to A4
+- Custom favicon and clean UI
+
+## Screens & workflow
+
+1. Turn Edit Mode ON and click any text to edit inline
+2. Use the small floating bar to Bold/Italic/Underline selections
+3. Turn Edit Mode OFF for a stable preview
+4. Click “Download PDF” — the exported file matches the preview area with ~10mm page margins
+
+## Use‑cases
+
+- Exam/quiz paper generator (questions + MCQs)
+- Worksheets, checklists, and one‑pagers
+- Briefs, memos, proposals, or printable forms
+- Classroom and training handouts
+
+## Tech stack
+
+- Next.js 15 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- react-contenteditable (inline editing)
+- html2canvas-pro (modern CSS color support such as lab/oklch)
+- jsPDF (client‑side PDF generation)
+
+## Getting started
+
+Install dependencies and run the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Exporting to PDF
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The “Download PDF” button captures the preview element and renders to A4 using `html2canvas-pro` and `jsPDF`.
 
-## Learn More
+Tips for best results:
 
-To learn more about Next.js, take a look at the following resources:
+- Switch Edit Mode OFF before exporting to avoid stray carets or selection highlights
+- Prefer local images from `/public` to avoid CORS issues
+- Avoid extremely large pages; the exporter paginates but very long documents may impact performance
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/
+    components/
+      PDFEditor.tsx          # Main editor with toolbar and export
+    types/
+      react-contenteditable.d.ts  # Narrow typings for mouse/focus handlers
+    layout.tsx               # App shell + branding
+    page.tsx                 # Renders the editor
+docs/
+  PDF_EDITOR_GUIDE.md       # Extended documentation
+public/
+  favicon.svg               # Custom favicon
+```
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This repo is ready for Vercel. After logging in with the Vercel CLI:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx vercel --prod
+```
+
+## Known limitations
+
+- html2canvas (and derivatives) don’t execute scripts within the captured area and support a subset of CSS. `html2canvas-pro` adds support for modern color spaces (lab/oklch), but complex effects (e.g., videos, heavy filters) may not render.
+- Cross‑origin images require proper CORS headers; prefer local assets under `/public`.
+
+## Credits
+
+- [`react-contenteditable`](https://www.npmjs.com/package/react-contenteditable)
+- [`html2canvas-pro`](https://www.npmjs.com/package/html2canvas-pro)
+- [`jspdf`](https://www.npmjs.com/package/jspdf)
+
+---
+
+If you build on this, consider opening a PR to share templates (e.g., different exam layouts, branding headers, or bilingual sheets).

@@ -92,7 +92,7 @@ export default function PDFEditor() {
         currentEditable.focus();
         positionToolbarNear(currentEditable);
       }
-    } catch (err) {
+    } catch {
       // no-op
     }
   };
@@ -144,9 +144,9 @@ export default function PDFEditor() {
 
       // Force exact A4 width during render for consistent PDF on mobile, then restore
       const prevWidth = element.style.width;
-      const prevMaxWidth = (element.style as any).maxWidth;
+      const prevMaxWidth = element.style.maxWidth;
       element.style.width = '210mm';
-      (element.style as any).maxWidth = '210mm';
+      element.style.maxWidth = '210mm';
 
       // Use html2canvas-pro directly on the element - supports modern CSS color functions
       const canvas = await html2canvas(element, {
@@ -160,7 +160,7 @@ export default function PDFEditor() {
 
       // Restore original styles
       element.style.width = prevWidth;
-      (element.style as any).maxWidth = prevMaxWidth;
+      element.style.maxWidth = prevMaxWidth;
 
       // Create PDF with proper sizing
       const pdf = new jsPDF('p', 'mm', 'a4');
